@@ -2,6 +2,20 @@ import numpy as np
 import random as rd
 
 
+class Tetrominos:
+    def __init__(self, id, array):
+        self.__id = id
+        self.__array = array
+
+    @property
+    def id(self):
+        return self.__id
+
+    @property
+    def array(self):
+        return self.__array
+
+
 class Grid:
     def __init__(self):
         self.__grid = np.zeros((30, 10), dtype=np.uint8)
@@ -9,13 +23,27 @@ class Grid:
 
 class Model:
     EMPTY = 0
-    TETRO_I = 1
-    TETRO_J = 2
-    TETRO_L = 3
-    TETRO_O = 4
-    TETRO_S = 5
-    TETRO_T = 6
-    TETRO_Z = 7
+    TETRO_I = Tetrominos(1, np.array([[0, 0, 1, 0],
+                                      [0, 0, 1, 0],
+                                      [0, 0, 1, 0],
+                                      [0, 0, 1, 0]]))
+    TETRO_J = Tetrominos(2, np.array([[0, 0, 1],
+                                      [0, 0, 1],
+                                      [0, 1, 1]]))
+    TETRO_L = Tetrominos(3, np.array([[0, 1, 0],
+                                      [0, 1, 0],
+                                      [0, 1, 1]]))
+    TETRO_O = Tetrominos(4, np.array([[1, 1],
+                                      [1, 1]]))
+    TETRO_S = Tetrominos(5, np.array([[0, 0, 0],
+                                      [0, 1, 1],
+                                      [1, 1, 0]]))
+    TETRO_T = Tetrominos(6, np.array([[0, 0, 1],
+                                      [0, 1, 1],
+                                      [0, 0, 1]]))
+    TETRO_Z = Tetrominos(7, np.array([[0, 0, 0],
+                                      [1, 1, 0],
+                                      [0, 1, 1]]))
     TETROS = [TETRO_I, TETRO_J, TETRO_L, TETRO_O, TETRO_S, TETRO_T, TETRO_Z]
 
     def __init__(self):
