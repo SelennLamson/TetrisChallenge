@@ -16,11 +16,6 @@ class Tetrominos:
         return self.__array
 
 
-class Grid:
-    def __init__(self):
-        self.__grid = np.zeros((30, 10), dtype=np.uint8)
-
-
 class Model:
     EMPTY = 0
     TETRO_I = Tetrominos(1, np.array([[0, 0, 1, 0],
@@ -47,7 +42,7 @@ class Model:
     TETROS = [TETRO_I, TETRO_J, TETRO_L, TETRO_O, TETRO_S, TETRO_T, TETRO_Z]
 
     def __init__(self):
-        self.__grid = Grid()
+        self.__grid = np.zeros((30, 10), dtype=np.uint8)
         self.__held_tetro = None
         self.__current_tetro = None
         self.__current_tetro_position = None
@@ -59,7 +54,17 @@ class Model:
 
     @property
     def grid(self):
-        return self.__grid
+        grid = self.__grid.copy()
+        tetro_height, tetro_width = self.current_tetro.array.shape
+        tetro_x, tetro_y = self.current_tetro_position
+        print(tetro_x, tetro_y)
+        print(tetro_height, tetro_width)
+        print(tetro_y+tetro_height, tetro_x+tetro_width)
+        print(grid.shape)
+        print(grid[tetro_x:tetro_x+tetro_width, tetro_y:tetro_y+tetro_height].shape)
+        grid[tetro_x:tetro_x+tetro_width, tetro_y:tetro_y+tetro_height] = self.current_tetro.array
+
+        return grid
 
     @property
     def next_tetro(self):

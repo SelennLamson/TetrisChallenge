@@ -6,7 +6,7 @@ def test_init_score():
 
 
 def test_current_tetro_not_null():
-    assert Model.TETRO_I <= Model().current_tetro <= Model.TETRO_Z
+    assert Model.TETRO_I.id <= Model().current_tetro.id <= Model.TETRO_Z.id
 
 
 def test_init_time_counter():
