@@ -2,6 +2,11 @@ import numpy as np
 
 
 class Grid:
+    def __init__(self):
+        self.__grid = np.zeros((30, 10))
+
+
+class Model:
     EMPTY = 0
     TETRO_T = 1
     TETRO_L = 2
@@ -12,7 +17,7 @@ class Grid:
     TETRO_I = 7
 
     def __init__(self):
-        self.__grid = np.zeros((30, 10))
+        self.__grid = Grid()
         self.__held_tetro = None
         self.__current_tetro = None
         self.__current_tetro_rotation = None
