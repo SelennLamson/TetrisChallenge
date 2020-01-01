@@ -1,28 +1,33 @@
 import numpy as np
+import random as rd
 
 
 class Grid:
     def __init__(self):
-        self.__grid = np.zeros((30, 10))
+        self.__grid = np.zeros((30, 10), dtype=np.uint8)
 
 
 class Model:
     EMPTY = 0
-    TETRO_T = 1
-    TETRO_L = 2
-    TETRO_J = 3
+    TETRO_I = 1
+    TETRO_J = 2
+    TETRO_L = 3
     TETRO_O = 4
     TETRO_S = 5
-    TETRO_Z = 6
-    TETRO_I = 7
+    TETRO_T = 6
+    TETRO_Z = 7
+    TETROS = [TETRO_I, TETRO_J, TETRO_L, TETRO_O, TETRO_S, TETRO_T, TETRO_Z]
 
     def __init__(self):
         self.__grid = Grid()
         self.__held_tetro = None
         self.__current_tetro = None
-        self.__current_tetro_rotation = None
         self.__current_tetro_position = None
-        self.__next_tetro = None
+        self.__current_tetro_rotation = 0
+        self._play_tetro(rd.choice(Model.TETROS))
+        self.__next_tetro = rd.choice(Model.TETROS)
+        self.__score = 0
+        self.__time_counter = 0
 
     @property
     def grid(self):
@@ -45,30 +50,59 @@ class Model:
         return self.__current_tetro_rotation
 
     @property
+    def held_tetro(self):
+        return self.__held_tetro
+
+    @property
     def time_counter(self):
-        pass
+        return self.__time_counter
 
     @property
     def score(self):
-        pass
+        return self.__score
 
     def rotate(self):
-        pass
+        self.__current_tetro_rotation = (self.__current_tetro_rotation + 1) % 4
 
     def left(self):
-        pass
+        pos = list(self.current_tetro_position)
+        pos[1] -= 1
+        if not self.collide(pos):
+            self.__current_tetro_position = pos
 
     def right(self):
-        pass
+        pos = list(self.current_tetro_position)
+        pos[1] += 1
+        if not self.collide(pos):
+            self.__current_tetro_position = pos
 
     def hold(self):
-        pass
-
-    def fast_descent(self):
-        pass
+        if self.held_tetro is None:
+            self.__held_tetro = self.current_tetro
+            self._play_tetro(self.next_tetro)
+            self.__next_tetro = rd.choice(Model.TETROS)
+        else:
+            tetro = self.held_tetro
+            self.__held_tetro = self.current_tetro
+            self._play_tetro(tetro)
 
     def instant_descent(self):
         pass
 
     def tick(self):
-        pass
+        pos = list(self.current_tetro_position)
+        pos[0] -= 1
+        if not self.collide(pos):
+            self.__current_tetro_position = pos
+
+        self.__time_counter += 1
+
+    def collide(self, pos=None):
+        if pos is None:
+            pos = self.current_tetro_position
+        return False
+
+    def _play_tetro(self, tetro):
+        self.__current_tetro = tetro
+        self.__current_tetro_position = [23, 4]
+        self.__current_tetro_rotation = 0
