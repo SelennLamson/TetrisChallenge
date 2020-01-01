@@ -7,6 +7,7 @@ import time
 TRANSPOSE = False
 FPS = 30
 SQUARE = 20
+PREVIEW = 10
 
 # In seconds
 DESCENT_DELAY = 1
@@ -29,6 +30,18 @@ class Controller:
 
 		self.font = pygame.font.SysFont("courier_new", 32, bold=True)
 
+		self.main_frame = np.zeros((self.video_size[0], self.video_size[1], 3), dtype=np.uint8)
+
+		squares = [[[40, 160], [48, 90]],
+				   [[40, 160], [148, 190]],
+				   [[70, 130], [240, 300]],
+				   [[70, 130], [340, 400]]]
+		thickness = 2
+
+		for sqr in squares:
+			self.main_frame[sqr[0][0]:sqr[0][1], sqr[1][0]:sqr[1][1], :] = 240
+			self.main_frame[sqr[0][0]+thickness:sqr[0][1]-thickness, sqr[1][0]+thickness:sqr[1][1]-thickness, :] = 0
+
 	def game(self):
 		self.last_model_tick = time.time()
 		self.game_start_time = time.time()
@@ -38,7 +51,7 @@ class Controller:
 			grid = self.model.grid
 			score = self.model.score
 			time_counter = self.model.time_counter
-			held_tetro = self.model.current_tetro							# Tetro index		# TODO: REVERT TO HELD ONCE IT'S DONE
+			held_tetro = self.model.held_tetro							# Tetro index
 			current_tetro = self.model.current_tetro					# Tetro index
 			current_tetro_position = self.model.current_tetro_position	# (X,Y) index of source
 			current_tetro_rotation = self.model.current_tetro_rotation	# 0-3
@@ -46,10 +59,10 @@ class Controller:
 
 			grid = np.random.randint(0, 7, (22, 10), dtype=np.uint8)
 
-			# Rendering current state
-			rendered = self.render_state(grid, score, time_counter, next_tetro, held_tetro, current_tetro, current_tetro_rotation, current_tetro_position)
+
+			# --- Rendering current state ---
+			rendered = self.render_state(grid)
 			pyg_img = pygame.surfarray.make_surface(rendered.swapaxes(0, 1) if TRANSPOSE else rendered)
-			pyg_img = pygame.transform.scale(pyg_img, self.video_size)
 			self.screen.blit(pyg_img, (0, 0))
 
 			game_time = round(time.time() - self.game_start_time)
@@ -57,12 +70,22 @@ class Controller:
 			minutes = (game_time - seconds) // 60 % 60
 			time_str = ("0" if minutes < 10 else "") + str(minutes) + ":" + ("0" if seconds < 10 else "") + str(seconds)
 			time_text = self.font.render(time_str, True, (240, 240, 240))
-			self.screen.blit(time_text, (100 - time_text.get_width() // 2, 100 - time_text.get_height() // 2))
+			self.screen.blit(time_text, (100 - time_text.get_width() // 2, 70 - time_text.get_height() // 2))
 
 			score_text = self.font.render(str(score), True, (240, 240, 240))
-			self.screen.blit(score_text, (100 - score_text.get_width() // 2, 200 - score_text.get_height() // 2))
+			self.screen.blit(score_text, (100 - score_text.get_width() // 2, 170 - score_text.get_height() // 2))
 
-			# Checking events
+			next_tetro_render = self.render_grid(next_tetro.array * next_tetro.id, preview=True)
+			pyg_img = pygame.surfarray.make_surface(next_tetro_render.swapaxes(0, 1) if TRANSPOSE else next_tetro_render)
+			self.screen.blit(pyg_img, (100 - next_tetro_render.shape[1] // 2, 270 - next_tetro_render.shape[0] // 2))
+
+			if held_tetro is not None:
+				held_tetro_render = self.render_grid(held_tetro.array * held_tetro.id, preview=True)
+				pyg_img = pygame.surfarray.make_surface(held_tetro_render.swapaxes(0, 1) if TRANSPOSE else held_tetro_render)
+				self.screen.blit(pyg_img, (100 - held_tetro_render.shape[1] // 2, 370 - held_tetro_render.shape[0] // 2))
+
+
+			# --- Checking events ---
 			fast_descent = False
 			for event in pygame.event.get():
 				if event.type == pygame.KEYDOWN and (event.key == pygame.K_LSHIFT or event.key == pygame.K_RSHIFT):
@@ -72,6 +95,7 @@ class Controller:
 					self.last_model_tick = time.time()
 				elif event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
 					self.model.rotate()
+					self.last_model_tick = time.time()
 				elif event.type == pygame.KEYDOWN and event.key == pygame.K_LEFT:
 					self.model.left()
 				elif event.type == pygame.KEYDOWN and event.key == pygame.K_RIGHT:
@@ -90,22 +114,23 @@ class Controller:
 				self.model.tick()
 				self.last_model_tick = time.time()
 
-	def render_state(self, grid, score, time_counter, next_tetro, held_tetro, current_tetro, current_tetro_rotation, current_tetro_position):
+	def render_state(self, grid):
 		grid_start_x = 200
 		grid_end_x = 200 + SQUARE * self.w
 		grid_start_y = 15
 		grid_end_y = 15 + SQUARE * self.h
 
-		render = np.zeros((self.video_size[0], self.video_size[1], 3), dtype=np.uint8)
+		render = self.main_frame.copy()
 
 		grid_render = self.render_grid(grid, rows=22)
 
 		render[grid_start_x:grid_end_x, grid_start_y:grid_end_y, :] = np.swapaxes(grid_render, 0, 1)
 		return render
 
-	def render_grid(self, grid, rows=None):
+	def render_grid(self, grid, rows=None, preview=False):
 		if rows is not None:
 			grid = grid[:rows, :]
+		size = PREVIEW if preview else SQUARE
 
 		T_color = [200, 0, 200]
 		L_color = [240, 150, 0]
@@ -122,7 +147,7 @@ class Controller:
 		grid_render = np.zeros((grid.shape[0], grid.shape[1], 3), dtype=np.uint8)
 		for tetro, color in zip(tetros, tetro_colors):
 			grid_render[:, :, :] += (grid == tetro) * np.array(color, dtype=np.uint8)
-		grid_render = np.kron(grid_render, np.ones((SQUARE, SQUARE, 1), dtype=np.uint8))
+		grid_render = np.kron(grid_render, np.ones((size, size, 1), dtype=np.uint8))
 
 		return grid_render
 
