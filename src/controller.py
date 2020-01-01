@@ -57,7 +57,7 @@ class Controller:
 			current_tetro_rotation = self.model.current_tetro_rotation	# 0-3
 			next_tetro = self.model.next_tetro							# Tetro index
 
-			grid = np.random.randint(0, 7, (22, 10), dtype=np.uint8)
+			# grid = np.random.randint(0, 7, (22, 10), dtype=np.uint8)
 
 
 			# --- Rendering current state ---

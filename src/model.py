@@ -15,6 +15,11 @@ class Tetrominos:
     def array(self):
         return self.__array
 
+    @array.setter
+    def array(self, array):
+        self.__array = array
+
+
 
 class Model:
     EMPTY = 0
@@ -57,12 +62,7 @@ class Model:
         grid = self.__grid.copy()
         tetro_height, tetro_width = self.current_tetro.array.shape
         tetro_x, tetro_y = self.current_tetro_position
-        print(tetro_x, tetro_y)
-        print(tetro_height, tetro_width)
-        print(tetro_y+tetro_height, tetro_x+tetro_width)
-        print(grid.shape)
-        print(grid[tetro_x:tetro_x+tetro_width, tetro_y:tetro_y+tetro_height].shape)
-        grid[tetro_x:tetro_x+tetro_width, tetro_y:tetro_y+tetro_height] = self.current_tetro.array
+        grid[tetro_x:tetro_x + tetro_width, tetro_y:tetro_y + tetro_height] += self.current_tetro.array
 
         return grid
 
@@ -95,7 +95,7 @@ class Model:
         return self.__score
 
     def rotate(self):
-        self.__current_tetro_rotation = (self.__current_tetro_rotation + 1) % 4
+        self.__current_tetro.array = np.rot90(self.__current_tetro.array)
 
     def left(self):
         pos = list(self.current_tetro_position)
